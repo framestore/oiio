@@ -10,7 +10,7 @@
 
 #include <OpenImageIO/imageio.h>
 #include <OpenImageIO/ustring.h>
-
+#include <OpenImageIO/texture.h>
 
 // Define symbols that let client applications determine if newly added
 // features are supported.
@@ -36,6 +36,22 @@ class ImageCacheTile;
 class ImageCachePerThreadInfo;
 };  // namespace pvt
 
+struct CacheStatistics {
+   long long   find_tile_calls;
+   long long   find_tile_microcache_misses;
+   int         find_tile_cache_misses;
+   long long   files_totalsize;
+   long long   bytes_read;
+   int         unique_files;
+   double      fileio_time;
+   double      fileopen_time;
+   double      file_locking_time;
+   double      tile_locking_time;
+   double      find_file_time;
+   double      find_tile_time;
+   int         file_retry_success;
+   int         tile_retry_success;
+};
 
 
 /// Define an API to an abstract class that manages image files,
@@ -1015,6 +1031,7 @@ public:
     /// the statistics, with higher numbers (up to a maximum of 5) yielding
     /// more and more esoteric information.
     virtual std::string getstats(int level = 1) const = 0;
+    virtual CacheStatistics get_cache_stats() const = 0;
 
     /// Reset most statistics to be as they were with a fresh ImageCache.
     /// Caveat emptor: this does not flush the cache itelf, so the resulting

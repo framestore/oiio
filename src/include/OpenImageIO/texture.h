@@ -446,7 +446,39 @@ private:
     friend class TextureOpt;
 };
 
+// Structure to hold IC and TS statistics.
+struct SystemStatistics {
+    long long   find_tile_calls;
+    long long   find_tile_microcache_misses;
+    int         find_tile_cache_misses;
+    long long   files_totalsize;
+    long long   bytes_read;
 
+    int         unique_files;
+    double      fileio_time;
+    double      fileopen_time;
+    double      file_locking_time;
+    double      tile_locking_time;
+    double      find_file_time;
+    double      find_tile_time;
+
+    long long   texture_queries;
+    long long   texture_batches;
+    long long   texture3d_queries;
+    long long   texture3d_batches;
+    long long   shadow_queries;
+    long long   shadow_batches;
+    long long   environment_queries;
+    long long   environment_batches;
+    long long   aniso_queries;
+    long long   aniso_probes;
+    float       max_aniso;
+    long long   closest_interps;
+    long long   bilinear_interps;
+    long long   cubic_interps;
+    int         file_retry_success;
+    int         tile_retry_success;
+};
 
 
 /// Define an API to an abstract class that that manages texture files,
@@ -1817,6 +1849,8 @@ public:
     /// underlying ImageCache, but if false will only contain
     /// texture-specific statistics.
     virtual std::string getstats (int level=1, bool icstats=true) const = 0;
+
+    virtual SystemStatistics get_system_stats() const = 0;
 
     /// Reset most statistics to be as they were with a fresh TextureSystem.
     /// Caveat emptor: this does not flush the cache itself, so the resulting
