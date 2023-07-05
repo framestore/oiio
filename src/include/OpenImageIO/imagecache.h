@@ -38,6 +38,7 @@ struct CacheStatistics {
    long long   find_tile_microcache_misses;
    int         find_tile_cache_misses;
    long long   files_totalsize;
+   long long   files_totalsize_ondisk;
    long long   bytes_read;
    int         unique_files;
    double      fileio_time;
@@ -48,6 +49,13 @@ struct CacheStatistics {
    double      find_tile_time;
    int         file_retry_success;
    int         tile_retry_success;
+   long long   mem_used;
+   int         tiles_created;
+   int         tiles_current;
+   int         tiles_peak;
+   int         open_files_created;
+   int         open_files_current;
+   int         open_files_peak;
 };
 
 
@@ -1017,6 +1025,7 @@ public:
     /// more and more esoteric infsormation.
     virtual std::string getstats(int level = 1) const = 0;
     virtual CacheStatistics get_cache_stats() const = 0;
+    virtual std::vector<FileStatistics> getFileStats() const = 0;
 
     /// Reset most statistics to be as they were with a fresh ImageCache.
     /// Caveat emptor: this does not flush the cache itelf, so the resulting

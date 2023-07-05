@@ -157,6 +157,7 @@ SystemStatistics TextureSystemImpl::getSystemStats () const
    nstats.aniso_queries        = stats.aniso_queries;
    nstats.aniso_probes         = stats.aniso_probes;
    nstats.max_aniso            = stats.max_aniso;
+   nstats.textureinfo_queries  = stats.imageinfo_queries;
 
    cstats = m_imagecache->get_cache_stats ();
 
@@ -164,6 +165,7 @@ SystemStatistics TextureSystemImpl::getSystemStats () const
    nstats.find_tile_microcache_misses = cstats.find_tile_microcache_misses;
    nstats.find_tile_cache_misses      = cstats.find_tile_cache_misses;
    nstats.files_totalsize             = cstats.files_totalsize;
+   nstats.files_totalsize_ondisk      = cstats.files_totalsize_ondisk;
    nstats.bytes_read                  = cstats.bytes_read;
    nstats.unique_files                = cstats.unique_files;
    nstats.fileio_time                 = cstats.fileio_time;
@@ -174,8 +176,21 @@ SystemStatistics TextureSystemImpl::getSystemStats () const
    nstats.find_tile_time              = cstats.find_tile_time;
    nstats.file_retry_success          = cstats.file_retry_success;
    nstats.tile_retry_success          = cstats.tile_retry_success;
+   
+   nstats.mem_used                    = cstats.mem_used;
+   nstats.tiles_created               = cstats.tiles_created;
+   nstats.tiles_current               = cstats.tiles_current;
+   nstats.tiles_peak                  = cstats.tiles_peak;
+   nstats.open_files_created          = cstats.open_files_created;
+   nstats.open_files_current          = cstats.open_files_current;
+   nstats.open_files_peak             = cstats.open_files_peak;
 
    return nstats;
+}
+
+std::vector<FileStatistics> TextureSystemImpl::getFileStats() const
+{
+    return m_imagecache->getFileStats();
 }
 
 EightBitConverter<float> TextureSystemImpl::uchar2float;
@@ -466,6 +481,7 @@ CacheStatistics ImageCacheImpl::get_cache_stats () const
     cstats.find_tile_microcache_misses  = stats.find_tile_microcache_misses;
     cstats.find_tile_cache_misses       = stats.find_tile_cache_misses;
     cstats.files_totalsize              = stats.files_totalsize;
+    cstats.files_totalsize_ondisk       = stats.files_totalsize_ondisk;
     cstats.bytes_read                   = stats.bytes_read;
     cstats.unique_files                 = stats.unique_files;
     cstats.fileio_time                  = stats.fileio_time;
@@ -476,6 +492,14 @@ CacheStatistics ImageCacheImpl::get_cache_stats () const
     cstats.find_tile_time               = stats.find_tile_time;
     cstats.file_retry_success           = stats.file_retry_success;
     cstats.tile_retry_success           = stats.tile_retry_success;
+    
+    cstats.mem_used                     = m_mem_used;
+    cstats.tiles_created                = m_stat_tiles_created;
+    cstats.tiles_current                = m_stat_tiles_current;
+    cstats.tiles_peak                   = m_stat_tiles_peak;
+    cstats.open_files_created           = m_stat_open_files_created;
+    cstats.open_files_current           = m_stat_open_files_current;
+    cstats.open_files_peak              = m_stat_open_files_peak;
 
     return cstats;
 }
@@ -488,7 +512,74 @@ TextureSystemImpl::printstats() const
     std::cout << getstats(m_statslevel, false) << "\n\n";
 }
 
+std::vector<FileStatistics> ImageCacheImpl::getFileStats() const
+{
+    std::vector<FileStatistics> stats;
 
+    for(FilenameMap::iterator f = m_files.begin(); f != m_files.end();++f) 
+    {
+        const ImageCacheFileRef& file(f->second);
+
+        stats.emplace_back();
+        FileStatistics &fs = stats.back();
+
+        fs.filename = file->filename().string();
+        fs.broken   = file->broken() || file->subimages() == 0;
+
+        fs.redund_tiles = file->redundant_tiles();
+        fs.times_opened = file->timesopened();
+        fs.tilesread    = file->tilesread();
+        fs.bytesread    = file->bytesread();
+        fs.redundant_bytesread = file->redundant_bytesread();
+        fs.iotime       = file->iotime();
+
+        const ImageSpec& spec(file->spec(0, 0));
+
+        fs.subimages = file->subimages();
+        fs.width = spec.width;
+        fs.height = spec.height;
+        fs.nchannels = spec.nchannels;
+
+        fs.formatcode = "u8";
+        switch (spec.format.basetype) {
+        case TypeDesc::UINT8: fs.formatcode = "u8"; break;
+        case TypeDesc::INT8: fs.formatcode = "i8"; break;
+        case TypeDesc::UINT16: fs.formatcode = "u16"; break;
+        case TypeDesc::INT16: fs.formatcode = "i16"; break;
+        case TypeDesc::UINT: fs.formatcode = "u32"; break;
+        case TypeDesc::INT: fs.formatcode = "i32"; break;
+        case TypeDesc::UINT64: fs.formatcode = "i64"; break;
+        case TypeDesc::INT64: fs.formatcode = "u64"; break;
+        case TypeDesc::HALF: fs.formatcode = "f16"; break;
+        case TypeDesc::FLOAT: fs.formatcode = "f32"; break;
+        case TypeDesc::DOUBLE: fs.formatcode = "f64"; break;
+        default: break;
+        }
+
+        fs.duplicate = file->duplicate();
+
+        fs.untiled  = false;
+        fs.unmipped = false;
+
+        for(int s=0; s<file->subimages(); ++s)
+        {
+            fs.untiled  = std::max(fs.untiled, file->subimageinfo(s).untiled);
+            fs.unmipped = std::max(fs.unmipped, file->subimageinfo(s).unmipped);
+        }
+
+        fs.mipunused = file->mipused() && !fs.unmipped;
+
+        if(file->mipreadcount().size()>1)
+        {
+            for(int c=0; c<file->mipreadcount().size(); c++)
+            {
+                fs.mipreadcount.push_back(file->mipreadcount()[c]);
+            }
+        }
+    }
+
+    return stats;
+}
 
 void
 TextureSystemImpl::reset_stats()

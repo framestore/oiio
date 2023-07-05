@@ -1033,6 +1033,7 @@ public:
     virtual std::string getstats(int level = 1) const;
     virtual CacheStatistics get_cache_stats() const;
     virtual void reset_stats();
+    virtual std::vector<FileStatistics> getFileStats() const;
     virtual void invalidate(ustring filename, bool force);
     virtual void invalidate(ImageHandle* file, bool force);
     virtual void invalidate_all(bool force = false);
