@@ -1031,6 +1031,7 @@ public:
     virtual bool has_error() const;
     virtual std::string geterror(bool clear = true) const;
     virtual std::string getstats(int level = 1) const;
+    virtual CacheStatistics get_cache_stats() const;
     virtual void reset_stats();
     virtual void invalidate(ustring filename, bool force);
     virtual void invalidate(ImageHandle* file, bool force);

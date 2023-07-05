@@ -350,6 +350,7 @@ public:
     virtual bool has_error() const;
     virtual std::string geterror(bool clear = true) const;
     virtual std::string getstats(int level = 1, bool icstats = true) const;
+    virtual SystemStatistics getSystemStats () const;
     virtual void reset_stats();
 
     virtual void invalidate(ustring filename, bool force);
