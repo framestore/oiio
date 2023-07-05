@@ -455,7 +455,16 @@ struct SystemStatistics {
     long long   find_tile_microcache_misses;
     int         find_tile_cache_misses;
     long long   files_totalsize;
+    long long   files_totalsize_ondisk;
     long long   bytes_read;
+
+    long long   mem_used;
+    int         tiles_created;
+    int         tiles_current;
+    int         tiles_peak;
+    int         open_files_created;
+    int         open_files_current;
+    int         open_files_peak;
 
     int         unique_files;
     double      fileio_time;
@@ -481,6 +490,32 @@ struct SystemStatistics {
     long long   cubic_interps;
     int         file_retry_success;
     int         tile_retry_success;
+    long long   textureinfo_queries;
+};
+
+// Structure to hold per-file statistics.
+struct FileStatistics {
+    std::string filename;
+    bool broken;
+
+    size_t redund_tiles;
+    size_t times_opened;
+    size_t tilesread;
+    size_t bytesread;
+    size_t redundant_bytesread;
+    double iotime;
+
+    int subimages;
+    int width;
+    int height;
+    int nchannels;
+    std::string formatcode;
+
+    bool duplicate;
+    bool untiled;
+    bool unmipped;
+    bool mipunused;
+    std::vector<size_t> mipreadcount;
 };
 
 
@@ -1870,6 +1905,8 @@ public:
     virtual std::string getstats (int level=1, bool icstats=true) const = 0;
 
     virtual SystemStatistics get_system_stats() const = 0;
+
+    virtual std::vector<FileStatistics> get_file_stats() const = 0;
 
     /// Reset most statistics to be as they were with a fresh TextureSystem.
     /// Caveat emptor: this does not flush the cache itself, so the resulting
