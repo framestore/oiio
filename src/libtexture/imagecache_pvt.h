@@ -1039,6 +1039,7 @@ public:
     std::string getstats(int level = 1) const override;
     CacheStatistics get_cache_stats() const override;
     void reset_stats() override;
+    std::vector<FileStatistics> get_file_stats() const override;
     void invalidate(ustring filename, bool force) override;
     void invalidate(ImageHandle* file, bool force) override;
     void invalidate_all(bool force = false) override;
