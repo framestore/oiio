@@ -325,6 +325,7 @@ public:
     bool has_error() const override;
     std::string geterror(bool clear = true) const override;
     std::string getstats(int level = 1, bool icstats = true) const override;
+    SystemStatistics get_system_stats() const override;
     void reset_stats() override;
 
     void invalidate(ustring filename, bool force) override;

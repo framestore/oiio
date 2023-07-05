@@ -145,6 +145,48 @@ TextureSystem::destroy(TextureSystem* x, bool teardown_imagecache)
 
 namespace pvt {  // namespace pvt
 
+SystemStatistics TextureSystemImpl::get_system_stats() const
+{
+   // Merge all the threads
+   ImageCacheStatistics stats;
+   m_imagecache->mergestats (stats);
+
+   SystemStatistics nstats;
+   CacheStatistics  cstats;
+   nstats.texture_queries      = stats.texture_queries;
+   nstats.texture_batches      = stats.texture_batches;
+   nstats.texture3d_queries    = stats.texture3d_queries;
+   nstats.texture3d_batches    = stats.texture3d_batches;
+   nstats.shadow_queries       = stats.shadow_queries;
+   nstats.shadow_batches       = stats.shadow_batches;
+   nstats.environment_queries  = stats.environment_queries;
+   nstats.environment_batches  = stats.environment_batches;
+   nstats.closest_interps      = stats.closest_interps;
+   nstats.bilinear_interps     = stats.bilinear_interps;
+   nstats.cubic_interps        = stats.cubic_interps;
+   nstats.aniso_queries        = stats.aniso_queries;
+   nstats.aniso_probes         = stats.aniso_probes;
+   nstats.max_aniso            = stats.max_aniso;
+
+   cstats = m_imagecache->get_cache_stats();
+
+   nstats.find_tile_calls             = cstats.find_tile_calls;
+   nstats.find_tile_microcache_misses = cstats.find_tile_microcache_misses;
+   nstats.find_tile_cache_misses      = cstats.find_tile_cache_misses;
+   nstats.files_totalsize             = cstats.files_totalsize;
+   nstats.bytes_read                  = cstats.bytes_read;
+   nstats.unique_files                = cstats.unique_files;
+   nstats.fileio_time                 = cstats.fileio_time;
+   nstats.fileopen_time               = cstats.fileopen_time;
+   nstats.file_locking_time           = cstats.file_locking_time;
+   nstats.tile_locking_time           = cstats.tile_locking_time;
+   nstats.find_file_time              = cstats.find_file_time;
+   nstats.find_tile_time              = cstats.find_tile_time;
+   nstats.file_retry_success          = cstats.file_retry_success;
+   nstats.tile_retry_success          = cstats.tile_retry_success;
+
+   return nstats;
+}
 
 EightBitConverter<float> TextureSystemImpl::uchar2float;
 
@@ -419,7 +461,30 @@ TextureSystemImpl::getstats(int level, bool icstats) const
     return out.str();
 }
 
+CacheStatistics ImageCacheImpl::get_cache_stats() const
+{
+    // Merge all the threads
+    ImageCacheStatistics stats;
+    mergestats(stats);
 
+    CacheStatistics cstats;
+    cstats.find_tile_calls              = stats.find_tile_calls;
+    cstats.find_tile_microcache_misses  = stats.find_tile_microcache_misses;
+    cstats.find_tile_cache_misses       = stats.find_tile_cache_misses;
+    cstats.files_totalsize              = stats.files_totalsize;
+    cstats.bytes_read                   = stats.bytes_read;
+    cstats.unique_files                 = stats.unique_files;
+    cstats.fileio_time                  = stats.fileio_time;
+    cstats.fileopen_time                = stats.fileopen_time;
+    cstats.file_locking_time            = stats.file_locking_time;
+    cstats.tile_locking_time            = stats.tile_locking_time;
+    cstats.find_file_time               = stats.find_file_time;
+    cstats.find_tile_time               = stats.find_tile_time;
+    cstats.file_retry_success           = stats.file_retry_success;
+    cstats.tile_retry_success           = stats.tile_retry_success;
+
+    return cstats;
+}
 
 void
 TextureSystemImpl::printstats() const
